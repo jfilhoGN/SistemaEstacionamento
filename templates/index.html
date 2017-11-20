@@ -1,0 +1,24 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>Sistema de Gestão de Estacionamento</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<!--[if lte IE 8]><script src="assets/js/ie/html5shiv.js"></script><![endif]-->
+		<link rel="stylesheet" href="assets/css/main.css" />
+		<!--[if lte IE 8]><link rel="stylesheet" href="assets/css/ie8.css" /><![endif]-->
+		<!--[if lte IE 9]><link rel="stylesheet" href="assets/css/ie9.css" /><![endif]-->
+	</head>
+	<body>
+		<h1>Sistema de Gestão de Estacionamento</h1>
+		<table border="1" cellpadding="5" cellspacing="5">
+			{% for row in data %}
+			    <tr>
+			    {% for d in row %}
+			        <td>{{ d }}</td>
+			    {% endfor %}
+			    </tr>
+			{% endfor %}
+			</table>
+	</body>
+</html>

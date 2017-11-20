@@ -1,0 +1,24 @@
+Interface Gráfica
+--------------------------
+Mudar o Entry para ListBox
+arrumar o Layout
+configurar o MYSQL
+
+Parte Web
+------------------------
+Criar o sistema para o Cliente 
+
+
+Parte Arduino
+------------------------
+Realizar a união entre o arduino e o python
+
+
+Maquete.
+-----------------------
+Maquete de Isopor
+Sulfite Preta (cartolina)
+Palito de Sorvete
+Cola
+Carrinhos
+
