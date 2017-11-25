@@ -1,6 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 	<head>
+		
 		<title>Sistema de Gestão de Estacionamento</title>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -8,17 +9,34 @@
 		<link rel="stylesheet" href="assets/css/main.css" />
 		<!--[if lte IE 8]><link rel="stylesheet" href="assets/css/ie8.css" /><![endif]-->
 		<!--[if lte IE 9]><link rel="stylesheet" href="assets/css/ie9.css" /><![endif]-->
+
+		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.js"></script>
+		<script type="text/javascript">
+			$(document).ready(function(){
+			    $('#table_id td.y_n').each(function(){
+			        if ($(this).text() == '0') {
+			            $(this).css('background-color','#09FF00');
+			        }
+			        else if ($(this).text() == '1') {
+			            $(this).css('background-color','#FF0000');
+			        }
+			        else{
+			        	$(this).css('background-color','#BFBFBF');
+			        }
+			    });
+			});
+		</script>
 	</head>
 	<body>
 		<h1>Sistema de Gestão de Estacionamento</h1>
-		<table border="1" cellpadding="5" cellspacing="5">
+		<table id="table_id"  border="1" cellpadding="5" cellspacing="5">
 			{% for row in data %}
 			    <tr>
 			    {% for d in row %}
-			        <td>{{ d }}</td>
+			        <td class="y_n">{{ d }}</td>
 			    {% endfor %}
 			    </tr>
-			{% endfor %}
+			{% endfor %} 
 			</table>
 	</body>
 </html>
