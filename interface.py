@@ -34,10 +34,10 @@ class Janela():
 		# FALTA TERMINAR
 		def tela_login(self):
 			self.login = Tk()
-			self.t = threading.Thread(target=self.leitura_arduino)
-			self.t.start()
+			#self.t = threading.Thread(target=self.leitura_arduino)
+			#self.t.start()
 			Button(self.login, text='Adicionar', background='#4E4E4E', command= self.tela_adicionar).grid(row=40, column = 10, sticky=W, pady=4)
-			Button(self.login, text='Buscar', background='#4E4E4E').grid(row=40, column = 20, sticky=W, pady=4)
+			#Button(self.login, text='Buscar', background='#4E4E4E').grid(row=40, column = 20, sticky=W, pady=4)
 			Button(self.login, text='Horário de Pico', background='#4E4E4E', command= self.tela_horario_pico).grid(row=40, column = 30, sticky=W, pady=4)
 			Button(self.login, text='Recarregar', background='#4E4E4E', command= self.refresh).grid(row=40, column = 40, sticky=W, pady=4)
 
@@ -83,6 +83,7 @@ class Janela():
 			self.lista_vagas_ocupadas.place(x=120,y=55)
 			for x in range(0,numlinhas):
 				row = cursor.fetchone()
+				print(row)
 				self.lista_vagas_ocupadas.insert(END,row[0])
 
 
@@ -137,36 +138,33 @@ class Janela():
 			if len(numlinhas) == 0:
 				cursor.execute("INSERT INTO Vaga(nomeVaga, valorPorVaga, ocupada) values (%s,%s,%s)",(local1, valor_vaga1,0))
 				db.commit()
+				tkMessageBox.showinfo("Mensagem", "Vaga Adicionada com sucesso!")
 			else:
 				cursor.execute("UPDATE Vaga SET nomeVaga=%s, valorPorVaga=%s WHERE nomeVaga =%s",(local1, valor_vaga1, local1))
 				db.commit()
+				tkMessageBox.showinfo("Mensagem", "Vaga Atualizada com sucesso!")
 
 
-		def fechar_programa(self):
-			self.raiz.destroy
-			#self.t.join()
-
-		# FALTA TERMINAR
-		def leitura_arduino(self):
-			#Parte de Conexão arduino 
-			cursor1 = db.cursor()
-			cursor2 = db.cursor()
-			ser = serial.Serial('/dev/ttyUSB1', 9600)
-			ser.write('5')
-			#ser.write(b'5') #Prefixo b necessario se estiver utilizando Python 3.X
-			while True:
-				valor1 = ser.readline()
-				valor2 = ser.readline()
-				sensor1 = valor1.split(":")
-				sensor2 = valor2.split(":")
-				print ("Local " +sensor1[0])
-				print ("ocupada " +sensor1[1])
-				print ("Local " +sensor2[0])
-				print ("ocupada " +sensor2[1])
-				cursor1.execute("UPDATE Vaga SET ocupada=%s WHERE nomeVaga =%s",(int(sensor1[1]), sensor1[0]))
-				db.commit()
-				cursor2.execute("UPDATE Vaga SET ocupada=%s WHERE nomeVaga =%s",(int(sensor2[1]), sensor2[0]))
-				db.commit()
+		# def leitura_arduino(self):
+		# 	#Parte de Conexão arduino 
+		# 	cursor1 = db.cursor()
+		# 	cursor2 = db.cursor()
+		# 	ser = serial.Serial('/dev/ttyUSB0', 9600)
+		# 	ser.write('5')
+		# 	#ser.write(b'5') #Prefixo b necessario se estiver utilizando Python 3.X
+		# 	while True:
+		# 		valor1 = ser.readline()
+		# 		valor2 = ser.readline()
+		# 		sensor1 = valor1.split(":")
+		# 		sensor2 = valor2.split(":")
+		# 		print ("Local " +sensor1[0])
+		# 		print ("ocupada " +sensor1[1])
+		# 		print ("Local " +sensor2[0])
+		# 		print ("ocupada " +sensor2[1])
+		# 		cursor1.execute("UPDATE Vaga SET ocupada=%s WHERE nomeVaga =%s",(int(sensor1[1]), sensor1[0]))
+		# 		db.commit()
+		# 		cursor2.execute("UPDATE Vaga SET ocupada=%s WHERE nomeVaga =%s",(int(sensor2[1]), sensor2[0]))
+		# 		db.commit()
             		  
  
 if __name__ == '__main__':
