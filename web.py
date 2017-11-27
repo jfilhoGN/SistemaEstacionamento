@@ -10,7 +10,7 @@ app.config['MYSQL_PASSWORD'] = 'asafaster'
 app.config['MYSQL_DB'] = 'SistemaEstacionamento'
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 
-@app.route('/_index', methods = ['GET'])
+@app.route('/', methods = ['GET'])
 def index():
 	cur = mysql.connection.cursor()
 	cur.execute("SELECT nomeVaga, ocupada from Vaga")
@@ -19,9 +19,6 @@ def index():
 	# for x in data:
 	# 	valor.append(str(x[0]))
 	return render_template('index.html', data = data)
-
-
-
 
 
 if __name__ == '__main__':

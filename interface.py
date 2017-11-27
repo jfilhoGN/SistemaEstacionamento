@@ -150,7 +150,6 @@ class Janela():
 				print ("ocupada " +sensor1[1])
 				print ("Local " +sensor2[0])
 				print ("ocupada " +sensor2[1])
-
 				cursor1.execute("UPDATE Vaga SET ocupada=%s WHERE nomeVaga =%s",(int(sensor1[1]), sensor1[0]))
 				db.commit()
 				cursor2.execute("UPDATE Vaga SET ocupada=%s WHERE nomeVaga =%s",(int(sensor2[1]), sensor2[0]))
