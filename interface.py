@@ -1,13 +1,35 @@
 # !/usr/bin/python
 #-*- encoding: utf-8 -*-
 import time
+from datetime import datetime
 from Tkinter import *
 from PIL import ImageTk, Image
 import MySQLdb, tkMessageBox, serial, threading, tkFont
-db = MySQLdb.connect(host="localhost",
+
+db1 = MySQLdb.connect(host="localhost",
                      user="root",
                      passwd="asafaster",
                      db="SistemaEstacionamento")
+db2 = MySQLdb.connect(host="localhost",
+                     user="root",
+                     passwd="asafaster",
+                     db="SistemaEstacionamento")
+# db3 = MySQLdb.connect(host="localhost",
+#                      user="root",
+#                      passwd="asafaster",
+#                      db="SistemaEstacionamento")
+# db4 = MySQLdb.connect(host="localhost",
+#                      user="root",
+#                      passwd="asafaster",
+#                      db="SistemaEstacionamento")
+# db5 = MySQLdb.connect(host="localhost",
+#                      user="root",
+#                      passwd="asafaster",
+#                      db="SistemaEstacionamento")
+# db6 = MySQLdb.connect(host="localhost",
+#                      user="root",
+#                      passwd="asafaster",
+#                      db="SistemaEstacionamento")
 
 class Janela():
 		def __init__ (self,toplevel):
@@ -15,6 +37,8 @@ class Janela():
 			self.frame.pack()		
 			self.fonte = tkFont.Font(family="", size=10)
 			
+			self.controle_id = 0
+			self.controle_id_2 = 0
 			self.container=Frame()
 			self.container.pack()
 			self.container.place(x=470, y=130)
@@ -33,6 +57,11 @@ class Janela():
 
 		# FALTA TERMINAR
 		def tela_login(self):
+			db = MySQLdb.connect(host="localhost",
+                     user="root",
+                     passwd="asafaster",
+                     db="SistemaEstacionamento")
+
 			self.login = Tk()
 			self.t = threading.Thread(target=self.leitura_arduino)
 			self.t.start()
@@ -63,7 +92,7 @@ class Janela():
 				row = cursor.fetchone()
 				self.lista_vagas_ocupadas.insert(END,row[0])
 			
-
+			db.close()
 			self.renda_diaria = 0
 			#numlinhas = int(cursor.rowcount)
 			self.lista_renda_diarias = Listbox(self.login,width=10,height=1)
@@ -72,6 +101,26 @@ class Janela():
 			self.refresh()
 			self.login.geometry('800x460')
 			self.login.configure(background='#B0AEAE')
+
+		def refresh(self):
+			db = MySQLdb.connect(host="localhost",
+                     user="root",
+                     passwd="asafaster",
+                     db="SistemaEstacionamento")
+
+			self.lista_vagas_ocupadas.delete(0,END)
+			cursor = db.cursor()
+			cursor.execute("SELECT count(*) from Vaga where ocupada = 1")
+			numlinhas = int(cursor.rowcount)
+			self.lista_vagas_ocupadas.place(x=120,y=55)
+			for x in range(0,numlinhas):
+				row = cursor.fetchone()
+				self.lista_vagas_ocupadas.insert(END,row[0])
+			db.close()
+			# self.lista_renda_diarias.delete(0,END)
+			# self.lista_renda_diarias.insert(END,self.renda_diaria)
+			self.login.after(1000,self.refresh)
+
 
 		# FALTA TERMINAR
 		def tela_horario_pico(self):
@@ -114,8 +163,12 @@ class Janela():
 			adicionar_vagas.geometry('400x260')
 			adicionar_vagas.configure(background='#B0AEAE')
 
-		# FALTA TERMINAR ----- IMPRIMIR CAIXA DE DIALOGO
+
 		def update_adicionar(self):
+			db = MySQLdb.connect(host="localhost",
+                     user="root",
+                     passwd="asafaster",
+                     db="SistemaEstacionamento")
 			cursor = db.cursor()
 			valor_vaga1 = self.valor_vaga.get()
 			local1 = self.local.get()
@@ -129,16 +182,26 @@ class Janela():
 				cursor.execute("UPDATE Vaga SET nomeVaga=%s, valorPorVaga=%s WHERE nomeVaga =%s",(local1, valor_vaga1, local1))
 				db.commit()
 				tkMessageBox.showinfo("Mensagem", "Vaga Atualizada com sucesso!")
+			db.close()
 
 
 		def leitura_arduino(self):
-			#Parte de Conexão arduino 
-			cursor1 = db.cursor()
-			cursor2 = db.cursor()
+			db = MySQLdb.connect(host="localhost",
+                     user="root",
+                     passwd="asafaster",
+                     db="SistemaEstacionamento")
+			a2estaOcupada = 0
+			a3estaOcupada = 0
+			#Parte de Conexão arduino
+			cursor = db.cursor()
+			# cursor2 = db2.cursor()
+			# cursor3 = db3.cursor()
+			# cursor4 = db4.cursor()
+			# cursor6 = db6.cursor()
 			ser = serial.Serial('/dev/ttyUSB0', 9600)
 			ser.write('5')
-			cursor1.execute("SELECT valorPorVaga from Vaga")
-			valor_por_vaga = cursor1.fetchall()
+			cursor.execute("SELECT valorPorVaga from Vaga")
+			valor_por_vaga = cursor.fetchall()
 			valor_por_segundo = valor_por_vaga[0][0]/3600
 			#ser.write(b'5') #Prefixo b necessario se estiver utilizando Python 3.X
 			while True:
@@ -150,25 +213,91 @@ class Janela():
 				print ("ocupada " +sensor1[1])
 				print ("Local " +sensor2[0])
 				print ("ocupada " +sensor2[1])
-				cursor1.execute("UPDATE Vaga SET ocupada=%s WHERE nomeVaga =%s",(int(sensor1[1]), sensor1[0]))
-				db.commit()
-				cursor2.execute("UPDATE Vaga SET ocupada=%s WHERE nomeVaga =%s",(int(sensor2[1]), sensor2[0]))
-				db.commit()
+				try:	
+					cursor.execute("UPDATE Vaga SET ocupada=%s WHERE nomeVaga =%s",(int(sensor1[1]), sensor1[0]))
+					db.commit()
+				except (AttributeError, MySQLdb.OperationalError):
+					db.connect()
+					cursor = db.cursor()
+					cursor.execute("UPDATE Vaga SET ocupada=%s WHERE nomeVaga =%s",(int(sensor1[1]), sensor1[0]))
+					db.commit()
+				try:
+					cursor.execute("UPDATE Vaga SET ocupada=%s WHERE nomeVaga =%s",(int(sensor2[1]), sensor2[0]))
+					db.commit()
+				except (AttributeError, MySQLdb.OperationalError):
+					db.connect()
+					cursor = db.cursor()
+					cursor.execute("UPDATE Vaga SET ocupada=%s WHERE nomeVaga =%s",(int(sensor2[1]), sensor2[0]))
+					db.commit()
+				a2_ocupado = sensor1[1]
+				a3_ocupado = sensor2[1]
 
+				if("1" in a2_ocupado and a2estaOcupada == 0):
+					horario_entrada = datetime.now()
+					try:
+						cursor.execute("INSERT INTO UsoVaga(horarioEntrada,Vaga_idVaga) VALUES (%s,2)",(horario_entrada, ))
+						db.commit()
+					except (AttributeError, MySQLdb.OperationalError):
+						db.connect()
+						cursor = db.cursor()
+						cursor.execute("INSERT INTO UsoVaga(horarioEntrada,Vaga_idVaga) VALUES (%s,2)",(horario_entrada, ))
+						db.commit()
+					cursor.execute("SELECT max(idUsoVaga) from UsoVaga")
+					resposta = cursor.fetchall()
+					if(len(resposta)==0):
+						resposta = 0
+					else:
+						resposta = int(resposta[0][0])
+					self.controle_id = resposta
+					print("controle "+ str(self.controle_id))
+					a2estaOcupada = 1
 
-		def refresh(self):
-			self.lista_vagas_ocupadas.delete(0,END)
-			cursor = db.cursor()
-			cursor.execute("SELECT count(*) from Vaga where ocupada = 1;")
-			numlinhas = int(cursor.rowcount)
-			self.lista_vagas_ocupadas.place(x=120,y=55)
-			for x in range(0,numlinhas):
-				row = cursor.fetchone()
-				self.lista_vagas_ocupadas.insert(END,row[0])
-			# self.lista_renda_diarias.delete(0,END)
-			# self.lista_renda_diarias.insert(END,self.renda_diaria)
-			self.login.after(1000,self.refresh)
+				if("1" in a3_ocupado and a3estaOcupada == 0):
+					horario_entrada = datetime.now()
+					try:
+						cursor.execute("INSERT INTO UsoVaga(horarioEntrada,Vaga_idVaga) VALUES (%s,3)",(horario_entrada, ))
+						db.commit()
+					except (AttributeError, MySQLdb.OperationalError):
+						db.connect()
+						cursor = db.cursor()
+						cursor.execute("INSERT INTO UsoVaga(horarioEntrada,Vaga_idVaga) VALUES (%s,3)",(horario_entrada, ))
+						db.commit()
+					cursor.execute("SELECT max(idUsoVaga) from UsoVaga")
+					resposta = cursor.fetchall()
+					if(len(resposta)==0):
+						resposta = 0
+					else:
+						resposta = int(resposta[0][0])
+					self.controle_id_2 = resposta
+					print("controle2: "+str(self.controle_id_2))
+					a3estaOcupada = 1
 
+				if("0" in a2_ocupado and a2estaOcupada == 1):
+					horario_saida = datetime.now()
+					try:
+						cursor.execute("UPDATE UsoVaga SET horarioSaida=%s where idUsoVaga=%s",(horario_saida,str(self.controle_id)))
+						db.commit()
+					except (AttributeError, MySQLdb.OperationalError):
+						db.connect()
+						cursor = db.cursor()
+						cursor.execute("UPDATE UsoVaga SET horarioSaida=%s where idUsoVaga=%s",(horario_saida,str(self.controle_id)))
+						db.commit()
+					a2estaOcupada = 0
+						
+				if("0" in a3_ocupado and a3estaOcupada == 1):
+					horario_saida = datetime.now()
+					try:
+						cursor.execute("UPDATE UsoVaga SET horarioSaida=%s where idUsoVaga=%s",(horario_saida,str(self.controle_id_2)))
+						db.commit()
+					except (AttributeError, MySQLdb.OperationalError):
+						db.connect()
+						cursor = db.cursor()
+						cursor.execute("UPDATE UsoVaga SET horarioSaida=%s where idUsoVaga=%s",(horario_saida,str(self.controle_id_2)))
+						db.commit()
+					a3estaOcupada = 0
+
+				print(str(a2estaOcupada))
+				print(str(a3estaOcupada))
             		  
  
 if __name__ == '__main__':
