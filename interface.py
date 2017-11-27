@@ -34,12 +34,12 @@ class Janela():
 		# FALTA TERMINAR
 		def tela_login(self):
 			self.login = Tk()
-			#self.t = threading.Thread(target=self.leitura_arduino)
-			#self.t.start()
+			self.t = threading.Thread(target=self.leitura_arduino)
+			self.t.start()
 			Button(self.login, text='Adicionar', background='#4E4E4E', command= self.tela_adicionar).grid(row=40, column = 10, sticky=W, pady=4)
 			#Button(self.login, text='Buscar', background='#4E4E4E').grid(row=40, column = 20, sticky=W, pady=4)
 			Button(self.login, text='Horário de Pico', background='#4E4E4E', command= self.tela_horario_pico).grid(row=40, column = 30, sticky=W, pady=4)
-			Button(self.login, text='Recarregar', background='#4E4E4E', command= self.refresh).grid(row=40, column = 40, sticky=W, pady=4)
+			#Button(self.login, text='Recarregar', background='#4E4E4E', command= self.refresh).grid(row=40, column = 40, sticky=W, pady=4)
 
 			Label(self.login, text='Total de Vagas', background='#B0AEAE', fg="black").grid(row=80)
 			Label(self.login, text='Vagas Ocupadas', background='#B0AEAE', fg="black").grid(row=90)
@@ -62,30 +62,16 @@ class Janela():
 			for x in range(0,numlinhas):
 				row = cursor.fetchone()
 				self.lista_vagas_ocupadas.insert(END,row[0])
+			
 
-			#cursor.execute("SELECT * FROM ")
+			self.renda_diaria = 0
 			#numlinhas = int(cursor.rowcount)
-			lista_renda_diarias = Listbox(self.login,width=10,height=1)
-			lista_renda_diarias.place(x=120,y=75)
-			# for x in range(0,numlinhas):
-			# 	row = cursor.fetchone()
-			# 	lista_vagas_ocupadas.insert()
-			#login.update()
-			#self.lista_vagas_ocupadas.update_idletasks()
+			self.lista_renda_diarias = Listbox(self.login,width=10,height=1)
+			self.lista_renda_diarias.place(x=120,y=75)
+			self.lista_renda_diarias.insert(END,self.renda_diaria)
+			self.refresh()
 			self.login.geometry('800x460')
 			self.login.configure(background='#B0AEAE')
-
-		def refresh(self):
-			cursor = db.cursor()
-			cursor.execute("SELECT count(*) from Vaga where ocupada = 1;")
-			numlinhas = int(cursor.rowcount)
-			self.lista_vagas_ocupadas.delete(0,END)
-			self.lista_vagas_ocupadas.place(x=120,y=55)
-			for x in range(0,numlinhas):
-				row = cursor.fetchone()
-				print(row)
-				self.lista_vagas_ocupadas.insert(END,row[0])
-
 
 		# FALTA TERMINAR
 		def tela_horario_pico(self):
@@ -145,26 +131,45 @@ class Janela():
 				tkMessageBox.showinfo("Mensagem", "Vaga Atualizada com sucesso!")
 
 
-		# def leitura_arduino(self):
-		# 	#Parte de Conexão arduino 
-		# 	cursor1 = db.cursor()
-		# 	cursor2 = db.cursor()
-		# 	ser = serial.Serial('/dev/ttyUSB0', 9600)
-		# 	ser.write('5')
-		# 	#ser.write(b'5') #Prefixo b necessario se estiver utilizando Python 3.X
-		# 	while True:
-		# 		valor1 = ser.readline()
-		# 		valor2 = ser.readline()
-		# 		sensor1 = valor1.split(":")
-		# 		sensor2 = valor2.split(":")
-		# 		print ("Local " +sensor1[0])
-		# 		print ("ocupada " +sensor1[1])
-		# 		print ("Local " +sensor2[0])
-		# 		print ("ocupada " +sensor2[1])
-		# 		cursor1.execute("UPDATE Vaga SET ocupada=%s WHERE nomeVaga =%s",(int(sensor1[1]), sensor1[0]))
-		# 		db.commit()
-		# 		cursor2.execute("UPDATE Vaga SET ocupada=%s WHERE nomeVaga =%s",(int(sensor2[1]), sensor2[0]))
-		# 		db.commit()
+		def leitura_arduino(self):
+			#Parte de Conexão arduino 
+			cursor1 = db.cursor()
+			cursor2 = db.cursor()
+			ser = serial.Serial('/dev/ttyUSB0', 9600)
+			ser.write('5')
+			cursor1.execute("SELECT valorPorVaga from Vaga")
+			valor_por_vaga = cursor1.fetchall()
+			valor_por_segundo = valor_por_vaga[0][0]/3600
+			#ser.write(b'5') #Prefixo b necessario se estiver utilizando Python 3.X
+			while True:
+				valor1 = ser.readline()
+				valor2 = ser.readline()
+				sensor1 = valor1.split(":")
+				sensor2 = valor2.split(":")
+				print ("Local " +sensor1[0])
+				print ("ocupada " +sensor1[1])
+				print ("Local " +sensor2[0])
+				print ("ocupada " +sensor2[1])
+
+				cursor1.execute("UPDATE Vaga SET ocupada=%s WHERE nomeVaga =%s",(int(sensor1[1]), sensor1[0]))
+				db.commit()
+				cursor2.execute("UPDATE Vaga SET ocupada=%s WHERE nomeVaga =%s",(int(sensor2[1]), sensor2[0]))
+				db.commit()
+
+
+		def refresh(self):
+			self.lista_vagas_ocupadas.delete(0,END)
+			cursor = db.cursor()
+			cursor.execute("SELECT count(*) from Vaga where ocupada = 1;")
+			numlinhas = int(cursor.rowcount)
+			self.lista_vagas_ocupadas.place(x=120,y=55)
+			for x in range(0,numlinhas):
+				row = cursor.fetchone()
+				self.lista_vagas_ocupadas.insert(END,row[0])
+			# self.lista_renda_diarias.delete(0,END)
+			# self.lista_renda_diarias.insert(END,self.renda_diaria)
+			self.login.after(1000,self.refresh)
+
             		  
  
 if __name__ == '__main__':
@@ -175,4 +180,5 @@ if __name__ == '__main__':
 	background_label.place(x=0, y=0, relwidth=1, relheight=1)
 	Janela(raiz) 
 	raiz.geometry('810x473')
+	#raiz.after_idle(janela.refresh)
 	raiz.mainloop()

@@ -26,6 +26,7 @@
 			    });
 			});
 		</script>
+		
 	</head>
 	<body>
 		<h1>Sistema de Gestão de Estacionamento</h1>
@@ -33,10 +34,27 @@
 			{% for row in data %}
 			    <tr>
 			    {% for d in row %}
-			        <td class="y_n">{{ d }}</td>
+			        <td id="tabela" class="y_n">{{ d }}</td>
 			    {% endfor %}
 			    </tr>
 			{% endfor %} 
 			</table>
+			<p id="demo"></p>
+		<script type="text/javascript" src="http://www.datejs.com/build/date.js"></script>
+		<script>
+		     var time = new Date().getTime();
+		     $(document.body).bind("mousemove keypress", function(e) {
+		         time = new Date().getTime();
+		     });
+		     function refresh() {
+		         if(new Date().getTime() - time >= 10000) 
+		             window.location.reload(true);
+		         else 
+		             setTimeout(refresh, 10000);
+		     }
+		    document.getElementById("demo").innerHTML = "Atualizado por último em: " + (new Date().toString("hh:mm:ss tt"));
+		     setTimeout(refresh, 10000);
+		</script>
 	</body>
+
 </html>
