@@ -6,31 +6,6 @@ from Tkinter import *
 from PIL import ImageTk, Image
 import MySQLdb, tkMessageBox, serial, threading, tkFont
 
-db1 = MySQLdb.connect(host="localhost",
-                     user="root",
-                     passwd="asafaster",
-                     db="SistemaEstacionamento")
-db2 = MySQLdb.connect(host="localhost",
-                     user="root",
-                     passwd="asafaster",
-                     db="SistemaEstacionamento")
-# db3 = MySQLdb.connect(host="localhost",
-#                      user="root",
-#                      passwd="asafaster",
-#                      db="SistemaEstacionamento")
-# db4 = MySQLdb.connect(host="localhost",
-#                      user="root",
-#                      passwd="asafaster",
-#                      db="SistemaEstacionamento")
-# db5 = MySQLdb.connect(host="localhost",
-#                      user="root",
-#                      passwd="asafaster",
-#                      db="SistemaEstacionamento")
-# db6 = MySQLdb.connect(host="localhost",
-#                      user="root",
-#                      passwd="asafaster",
-#                      db="SistemaEstacionamento")
-
 class Janela():
 		def __init__ (self,toplevel):
 			self.frame=Frame()		
@@ -66,13 +41,11 @@ class Janela():
 			self.t = threading.Thread(target=self.leitura_arduino)
 			self.t.start()
 			Button(self.login, text='Adicionar', background='#4E4E4E', command= self.tela_adicionar).grid(row=40, column = 10, sticky=W, pady=4)
-			#Button(self.login, text='Buscar', background='#4E4E4E').grid(row=40, column = 20, sticky=W, pady=4)
-			Button(self.login, text='Horário de Pico', background='#4E4E4E', command= self.tela_horario_pico).grid(row=40, column = 30, sticky=W, pady=4)
-			#Button(self.login, text='Recarregar', background='#4E4E4E', command= self.refresh).grid(row=40, column = 40, sticky=W, pady=4)
+			Button(self.login, text='Renda Diária', background='#4E4E4E', command= self.renda_diaria_tela).grid(row=40, column = 30, sticky=W, pady=4)
 
 			Label(self.login, text='Total de Vagas', background='#B0AEAE', fg="black").grid(row=80)
 			Label(self.login, text='Vagas Ocupadas', background='#B0AEAE', fg="black").grid(row=90)
-			Label(self.login, text='Renda Diária', background='#B0AEAE', fg="black").grid(row=100)
+			Label(self.login, text='Renda Diária  R$', background='#B0AEAE', fg="black").grid(row=100)
 
 			#Fazer o Select de Vagas Ocupadas, numero de vagas total e renda diária
 			cursor = db.cursor()
@@ -94,7 +67,6 @@ class Janela():
 			
 			db.close()
 			self.renda_diaria = 0
-			#numlinhas = int(cursor.rowcount)
 			self.lista_renda_diarias = Listbox(self.login,width=10,height=1)
 			self.lista_renda_diarias.place(x=120,y=75)
 			self.lista_renda_diarias.insert(END,self.renda_diaria)
@@ -117,35 +89,23 @@ class Janela():
 				row = cursor.fetchone()
 				self.lista_vagas_ocupadas.insert(END,row[0])
 			db.close()
-			# self.lista_renda_diarias.delete(0,END)
-			# self.lista_renda_diarias.insert(END,self.renda_diaria)
 			self.login.after(1000,self.refresh)
 
 
-		# FALTA TERMINAR
-		def tela_horario_pico(self):
-			horario_pico = Tk()
-			Label(horario_pico, text='Horário de Pico', background='#B0AEAE', fg="black").grid(row=80)
-
-			#Fazer o Select de Vagas Ocupadas, numero de vagas total e renda diária
-			#cursor = db.cursor()
-			#cursor.execute("SELECT * FROM ")
-			#numlinhas = int(cursor.rowcount)
-			lista_horario_pico = Listbox(horario_pico,width=20,height=1)
-			lista_horario_pico.place(x=100,y=2)
-			# for x in range(0,numlinhas):
-			# 	row = cursor.fetchone()
-			# 	lista_horario_pico.insert()
-
-			# self.entry_horario_pico = Entry(horario_pico)
-			# self.entry_horario_pico.grid(row=100, column=10)
-
-			#Fazer o Select de horario de pico
-			
-			Button(horario_pico, text='OK', command=horario_pico.destroy, background='#4E4E4E', fg="black").grid(row=100, column = 30, sticky=W, pady=4)
-			
-			horario_pico.geometry('400x260')
-			horario_pico.configure(background='#B0AEAE')
+		def renda_diaria_tela(self):
+			db = MySQLdb.connect(host="localhost",
+                     user="root",
+                     passwd="asafaster",
+                     db="SistemaEstacionamento")
+			hoje = datetime.now()
+			cursor = db.cursor()
+			cursor.execute("SELECT count(*) FROM UsoVaga WHERE MONTH(horarioEntrada) = %s AND DAY(horarioEntrada) = %s AND YEAR(horarioSaida) != 0000" ,(hoje.month, hoje.day))
+			total = cursor.fetchall()
+			self.renda_diaria = int(total[0][0])*4 
+			self.lista_renda_diarias.delete(0,END)
+			self.lista_renda_diarias = Listbox(self.login,width=10,height=1)
+			self.lista_renda_diarias.place(x=120,y=75)
+			self.lista_renda_diarias.insert(END,self.renda_diaria)
 
 
 		def tela_adicionar(self):
@@ -194,10 +154,6 @@ class Janela():
 			a3estaOcupada = 0
 			#Parte de Conexão arduino
 			cursor = db.cursor()
-			# cursor2 = db2.cursor()
-			# cursor3 = db3.cursor()
-			# cursor4 = db4.cursor()
-			# cursor6 = db6.cursor()
 			ser = serial.Serial('/dev/ttyUSB0', 9600)
 			ser.write('5')
 			cursor.execute("SELECT valorPorVaga from Vaga")
@@ -296,8 +252,6 @@ class Janela():
 						db.commit()
 					a3estaOcupada = 0
 
-				print(str(a2estaOcupada))
-				print(str(a3estaOcupada))
             		  
  
 if __name__ == '__main__':
